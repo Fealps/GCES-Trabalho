@@ -1,6 +1,6 @@
 FROM python:latest
 
-WORKDIR /app/library_
+WORKDIR /app/library_back
 
 COPY ./requirements.txt .
 
