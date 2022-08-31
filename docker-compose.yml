@@ -1,0 +1,49 @@
+services:
+  db:
+    container_name: db
+    networks:
+      - gces
+    image: postgres:latest
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
+
+  library_back:
+    container_name: library_back
+    networks:
+      - gces
+    build: ./library_back
+    volumes:
+      - .:/library_back
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    restart: always
+    depends_on:
+      - db
+
+  library_front:
+    container_name: library_front
+    networks:
+      - gces
+    build: ./library_front
+    command : npm start
+    volumes:
+      - .:/library_front
+    ports:
+      - "3000:3000"
+    restart: always
+    depends_on:
+      - library_back
+    stdin_open: true
+
+networks:
+  gces:
+    driver: bridge
