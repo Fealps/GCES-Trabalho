@@ -1,8 +1,9 @@
-name: Build
+name: Deploy
 
 on:
   workflow_run:
-    workflows: ["Run Tests"]
+    workflows: ["Build"]
+    branches: [main]
     types: 
       - completed
 
@@ -26,6 +27,12 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
       - name: Build and push - Library Back
         id: docker_build_back
         uses: docker/build-push-action@v2
@@ -33,34 +40,11 @@ jobs:
           context: ./library_back
           file: ./library_back/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/library_back:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
   front-on-success:
-      runs-on: ubuntu-latest      
-      if: ${{ github.event.workflow_run.conclusion == 'success' }}
-      steps:
-        - name: Check Out Repo 
-          uses: actions/checkout@v2
-
-        - name: Cache Docker layers
-          uses: actions/cache@v2
-          with:
-            path: /tmp/.buildx-cache
-            key: ${{ runner.os }}-buildx-${{ github.sha }}
-            restore-keys: |
-              ${{ runner.os }}-buildx-
-
-      - name: Build and push - Library Front
-        id: docker_build_front
-        uses: docker/build-push-action@v2
-        with:
-          context: ./library_front
-          file: ./library_front/Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/library_front:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-  compose-on-success:
     runs-on: ubuntu-latest      
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
@@ -73,10 +57,30 @@ jobs:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-    
+            ${{ runner.os }}-buildx-
 
-      - uses: actions/checkout@v2
-      - name: Build the stack
-        run: docker-compose up -d
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
 
-      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          
+      - name: Build and push - Library Front
+        id: docker_build_front
+        uses: docker/build-push-action@v2
+        with:
+          context: ./library_front
+          file: ./library_front/Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/library_front:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
