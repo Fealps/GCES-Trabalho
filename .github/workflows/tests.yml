@@ -1,4 +1,4 @@
-name: Backend Tests
+name: Run Tests
 
 on: [push]
 
@@ -42,3 +42,24 @@ jobs:
               python manage.py makemigrations
               python manage.py migrate
               python manage.py test
+  
+  front_test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./library_front
+
+    steps:
+      - name: Check Out Repo 
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.8.x
+
+      - name: Run npm install
+        run: npm install
+
+      - name: Run test
+        run: npm run test
