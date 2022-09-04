@@ -48,12 +48,13 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
-      - name: Build the stack
-        uses: actions/checkout@v2
-        run: docker-compose up -d
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+      
+      - uses: actions/checkout@v2
+      - name: Build the stack
+        run: docker-compose up -d
 
       - name: Cache Docker layers
         uses: actions/cache@v2
