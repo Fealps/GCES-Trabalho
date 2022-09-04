@@ -1,15 +1,14 @@
 name: CI to Docker hub
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
     branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./
     
     steps:
       - name: Check Out Repo 
@@ -48,9 +47,8 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/library_back:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-
+      - uses: actions/checkout@v2
       - name: Build the stack
-        uses: actions/checkout@v2
         run: docker-compose up -d
 
       - name: Image digest
