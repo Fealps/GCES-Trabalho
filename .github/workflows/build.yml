@@ -1,4 +1,4 @@
-name: CI to Docker hub
+name: Build
 
 on:
   workflow_run:
@@ -8,60 +8,60 @@ on:
       - completed
 
 jobs:
-if: ${{ github.event.workflow_run.conclusion == 'success' }}
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Check Out Repo 
-        uses: actions/checkout@v2
+  on-success:
+      runs-on: ubuntu-latest      
+      if: ${{ github.event.workflow_run.conclusion == 'success' }}
+      build:
+        steps:
+          - name: Check Out Repo 
+            uses: actions/checkout@v2
 
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+          - name: Cache Docker layers
+            uses: actions/cache@v2
+            with:
+              path: /tmp/.buildx-cache
+              key: ${{ runner.os }}-buildx-${{ github.sha }}
+              restore-keys: |
+                ${{ runner.os }}-buildx-
 
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v1
+          - name: Set up Docker Buildx
+            id: buildx
+            uses: docker/setup-buildx-action@v1
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          - name: Login to Docker Hub
+            uses: docker/login-action@v1
+            with:
+              username: ${{ secrets.DOCKER_HUB_USERNAME }}
+              password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build and push - Library Back
-        id: docker_build_back
-        uses: docker/build-push-action@v2
-        with:
-          context: ./library_back
-          file: ./library_back/Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/library_back:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          - name: Build and push - Library Back
+            id: docker_build_back
+            uses: docker/build-push-action@v2
+            with:
+              context: ./library_back
+              file: ./library_back/Dockerfile
+              builder: ${{ steps.buildx.outputs.name }}
+              push: true
+              tags: ${{ secrets.DOCKER_HUB_USERNAME }}/library_back:latest
+              cache-from: type=local,src=/tmp/.buildx-cache
+              cache-to: type=local,dest=/tmp/.buildx-cache
 
-      - name: Build and push - Library Front
-        id: docker_build_front
-        uses: docker/build-push-action@v2
-        with:
-          context: ./library_front
-          file: ./library_front/Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/library_front:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          - name: Build and push - Library Front
+            id: docker_build_front
+            uses: docker/build-push-action@v2
+            with:
+              context: ./library_front
+              file: ./library_front/Dockerfile
+              builder: ${{ steps.buildx.outputs.name }}
+              push: true
+              tags: ${{ secrets.DOCKER_HUB_USERNAME }}/library_front:latest
+              cache-from: type=local,src=/tmp/.buildx-cache
+              cache-to: type=local,dest=/tmp/.buildx-cache
 
 
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
-      
-      - uses: actions/checkout@v2
-      - name: Build the stack
-        run: docker-compose up -d
+          - name: Image digest
+            run: echo ${{ steps.docker_build.outputs.digest }}
+          
+          - uses: actions/checkout@v2
+          - name: Build the stack
+            run: docker-compose up -d
