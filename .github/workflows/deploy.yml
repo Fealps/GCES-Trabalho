@@ -44,6 +44,7 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/library_back:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+  
   front-on-success:
     runs-on: ubuntu-latest      
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -68,7 +69,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-          
+
       - name: Build and push - Library Front
         id: docker_build_front
         uses: docker/build-push-action@v2

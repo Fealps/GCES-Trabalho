@@ -35,6 +35,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+
   front-on-success:
     runs-on: ubuntu-latest      
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -50,15 +51,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-    - name: Build and push - Library Front
-      id: docker_build_front
-      uses: docker/build-push-action@v2
-      with:
-        context: ./library_front
-        file: ./library_front/Dockerfile
-        builder: ${{ steps.buildx.outputs.name }}
-        cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache
+      - name: Build and push - Library Front
+        id: docker_build_front
+        uses: docker/build-push-action@v2
+        with:
+          context: ./library_front
+          file: ./library_front/Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+  
   compose-on-success:
     runs-on: ubuntu-latest      
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
