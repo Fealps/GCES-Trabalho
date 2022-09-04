@@ -1,0 +1,25 @@
+name: Lint
+
+on: [push]
+
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./library_front
+
+    steps:      
+    - name: Check Out Repo 
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 14.x
+    
+    - name: Install Dependencies
+      run: npm install
+
+    - name: ESLint check
+      run: npm run lint
