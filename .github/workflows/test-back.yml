@@ -1,0 +1,44 @@
+name: Backend Tests
+
+on: [push]
+
+jobs:
+  back_test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./library_back
+
+    services:
+      postgres_main:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Check Out Repo 
+        uses: actions/checkout@v2
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+           python-version: 3.8
+      - name: Install requirements
+        run: |
+              pip install -r requirements.txt
+      - name: Run tests
+        env:
+            DEBUG: "0"
+            POSTGRES_USER: ${{ secrets.POSTGRES_USERNAME }}
+            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+            POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+            POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+        run: |
+              python manage.py makemigrations
+              python manage.py migrate
+              python manage.py test
